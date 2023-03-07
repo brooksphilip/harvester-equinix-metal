@@ -6,4 +6,13 @@ It deploys a single node by default.
 
 To deploy a 3 node cluster change "build_cluster" to true. 
 
+```bash
+cp terrform.tfvars.tmpl terraform.tfvars
+```
+
+Fill in details in terraform.tfvars
+
+```bash
+terraform apply
+```
 
