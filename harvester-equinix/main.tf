@@ -18,6 +18,7 @@ resource "equinix_metal_reserved_ip_block" "harvester" {
   quantity   = 1
 }
 
+############ Harvester Host 1 ##################
 resource "equinix_metal_device" "harvester1" {
   hostname         = "Harvester1"
   plan             = var.instance_size
@@ -38,7 +39,18 @@ resource "equinix_metal_ip_attachment" "harvester1" {
   cidr_notation = join("/", [cidrhost(equinix_metal_reserved_ip_block.harvester.cidr_notation, 0), "32"])
 }
 
+resource "equinix_metal_device_network_type" "harvester1" {
+  device_id = equinix_metal_device.harvester1.id
+  type      = "hybrid"
+}
 
+resource "equinix_metal_port_vlan_attachment" "harvester" {
+  device_id = equinix_metal_device_network_type.harvester1.id
+  port_name = "eth1"
+  vlan_vnid = equinix_metal_vlan.harvester.vxlan
+}
+
+############ Harvester Host 2 ##################
 resource "equinix_metal_device" "harvester2" {
   count = var.build_cluster ? 1 : 0
   hostname         = "Harvester2"
@@ -50,7 +62,7 @@ resource "equinix_metal_device" "harvester2" {
   ipxe_script_url  = "https://raw.githubusercontent.com/brooksphilip/ipxe-examples/main/equinix/ipxe-install"
   always_pxe       = "false"
 
-  user_data = local.cloud_config_agent
+  user_data = local.cloud_config_agent1
 
   ip_address {
     type = "public_ipv4"
@@ -64,13 +76,20 @@ resource "equinix_metal_device" "harvester2" {
   depends_on = [equinix_metal_device.harvester1]
 }
 
-# resource "equinix_metal_ip_attachment" "harvester2" {
-#   count = var.build_cluster ? 1 : 0
-#   device_id = equinix_metal_device.harvester2[0].id
-#   # following expression will result to sth like "147.229.10.152/32"
-#   cidr_notation = join("/", [cidrhost(equinix_metal_reserved_ip_block.harvester.cidr_notation, 1), "32"])
-# }
+resource "equinix_metal_device_network_type" "harvester2" {
+  device_id = equinix_metal_device.harvester1.id
+  type      = "hybrid"
+}
 
+resource "equinix_metal_port_vlan_attachment" "harvester2" {
+  device_id = equinix_metal_device_network_type.harvester2.id
+  port_name = "eth1"
+  vlan_vnid = equinix_metal_vlan.harvester.vxlan
+
+   depends_on = [equinix_metal_device.harvester1, equinix_metal_device_network_type.harvester2]
+}
+
+############ Harvester Host 3 ##################
 resource "equinix_metal_device" "harvester3" {
   count = var.build_cluster ? 1 : 0
   hostname         = "Harvester3"
@@ -82,7 +101,7 @@ resource "equinix_metal_device" "harvester3" {
   ipxe_script_url  = "https://raw.githubusercontent.com/brooksphilip/ipxe-examples/main/equinix/ipxe-install"
   always_pxe       = "false"
 
-  user_data = local.cloud_config_agent
+  user_data = local.cloud_config_agent1
 
   ip_address {
     type = "public_ipv4"
@@ -97,12 +116,18 @@ resource "equinix_metal_device" "harvester3" {
 
 }
 
-# resource "equinix_metal_ip_attachment" "harvester3" {
-#   count = var.build_cluster ? 1 : 0
-#   device_id = equinix_metal_device.harvester3[0].id
-#   # following expression will result to sth like "147.229.10.152/32"
-#   cidr_notation = join("/", [cidrhost(equinix_metal_reserved_ip_block.harvester.cidr_notation, 2), "32"])
-# }
+resource "equinix_metal_device_network_type" "harvester3" {
+  device_id = equinix_metal_device.harvester1.id
+  type      = "hybrid"
+}
+
+resource "equinix_metal_port_vlan_attachment" "harvester3" {
+  device_id = equinix_metal_device_network_type.harvester3.id
+  port_name = "eth1"
+  vlan_vnid = equinix_metal_vlan.harvester.vxlan
+
+  depends_on = [equinix_metal_device.harvester1, equinix_metal_device_network_type.harvester3]
+}
 
 
 locals {
@@ -131,7 +156,7 @@ locals {
       vip: "${equinix_metal_reserved_ip_block.harvester.address}"
       vip_mode: "static"
   CLOUD_CONFIG
-  cloud_config_agent = <<-CLOUD_CONFIG
+  cloud_config_agent1 = <<-CLOUD_CONFIG
     #cloud-config
     scheme_version: 1
     server_url: https://${equinix_metal_reserved_ip_block.harvester.address}:443  
@@ -156,4 +181,37 @@ locals {
       iso_url: "https://equinixphilip.s3.amazonaws.com/harvester-v1.1.1-amd64.iso"
       tty: ttyS1,115200n8   # For machines without a VGA console
   CLOUD_CONFIG
+  # cloud_config_agent2 = <<-CLOUD_CONFIG
+  #   #cloud-config
+  #   scheme_version: 1
+  #   server_url: https://${equinix_metal_reserved_ip_block.harvester.address}:443  
+  #   token: ${var.token}
+  #   os:
+  #     write_files:
+  #       - encoding ""
+  #         content: |
+  #           auto eth1
+  #           iface eth1 inet static
+  #             address ${equinix_metal_device.harvester2.access_private_ipv4}
+  #             netmask 255.255.255.248
+  #need to add other shit 
+  #     ssh_authorized_keys:
+  #     - ${var.ssh_key}
+  #     password: ${var.password}      # Replace with your password
+  #     dns_nameservers:
+  #     - 1.1.1.1
+  #     - 8.8.8.8
+  #   install:
+  #     mode: join
+  #     networks:
+  #       harvester-mgmt:
+  #         interfaces:
+  #         - name: eth0
+  #         default_route: true
+  #         method: dhcp
+  #     device: /dev/sda # The target disk to install
+  #     #data_disk: /dev/sdb # It is recommended to use a separate disk to store VM data
+  #     iso_url: "https://equinixphilip.s3.amazonaws.com/harvester-v1.1.1-amd64.iso"
+  #     tty: ttyS1,115200n8   # For machines without a VGA console
+  # CLOUD_CONFIG
 }
