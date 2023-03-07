@@ -6,6 +6,8 @@ It deploys a single node by default.
 
 To deploy a 3 node cluster change "build_cluster" to true. 
 
+### Deploy
+
 ```bash
 cp terrform.tfvars.tmpl terraform.tfvars
 ```
