@@ -18,3 +18,7 @@ Fill in details in terraform.tfvars
 terraform apply
 ```
 
+
+## TODO
+
+Need to configure VLANs and Gateway to add storage network. 
