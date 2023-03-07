@@ -104,7 +104,7 @@ locals {
       device: "/dev/sda"
       iso_url: "https://equinixphilip.s3.amazonaws.com/harvester-v1.1.1-amd64.iso"
       tty: "ttyS1,115200n8"
-      vip: "${equinix_metal_reserved_ip_block.harvester.address[0]}"
+      vip: "${equinix_metal_reserved_ip_block.harvester.address}"
       vip_mode: "static"
   CLOUD_CONFIG
   cloud_config_agent = <<-CLOUD_CONFIG
