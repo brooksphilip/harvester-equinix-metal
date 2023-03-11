@@ -64,13 +64,6 @@ resource "equinix_metal_device" "harvester2" {
   depends_on = [equinix_metal_device.harvester1]
 }
 
-# resource "equinix_metal_ip_attachment" "harvester2" {
-#   count = var.build_cluster ? 1 : 0
-#   device_id = equinix_metal_device.harvester2[0].id
-#   # following expression will result to sth like "147.229.10.152/32"
-#   cidr_notation = join("/", [cidrhost(equinix_metal_reserved_ip_block.harvester.cidr_notation, 1), "32"])
-# }
-
 resource "equinix_metal_device" "harvester3" {
   count = var.build_cluster ? 1 : 0
   hostname         = "Harvester3"
@@ -96,13 +89,6 @@ resource "equinix_metal_device" "harvester3" {
   depends_on = [equinix_metal_device.harvester1]
 
 }
-
-# resource "equinix_metal_ip_attachment" "harvester3" {
-#   count = var.build_cluster ? 1 : 0
-#   device_id = equinix_metal_device.harvester3[0].id
-#   # following expression will result to sth like "147.229.10.152/32"
-#   cidr_notation = join("/", [cidrhost(equinix_metal_reserved_ip_block.harvester.cidr_notation, 2), "32"])
-# }
 
 
 locals {
@@ -157,3 +143,4 @@ locals {
       tty: ttyS1,115200n8   # For machines without a VGA console
   CLOUD_CONFIG
 }
+
