@@ -15,11 +15,13 @@ provider "equinix" {
 
 module "harvester1" {
   source   = "./harvester-equinix"
-  project = "Harvester_Terraform"
+  # project = "Harvester_Terraform"
   password = var.password
   ssh_key  = var.ssh_key
   #k8s join token
   token    = var.token
   ##enabling this will deploy a 3 node cluster (Default False)
   build_cluster = true
+  project = "Harvester"
+  gateway_id = "10.66.12.41"
 }

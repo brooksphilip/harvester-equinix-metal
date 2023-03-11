@@ -34,3 +34,7 @@ variable "build_cluster" {
   type = bool
   default = "false"
 }
+
+variable "gateway_id" {
+  
+}
