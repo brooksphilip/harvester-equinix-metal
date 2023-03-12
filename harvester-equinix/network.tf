@@ -39,3 +39,11 @@ data "equinix_metal_vlan" "harvester" {
   vxlan      = 2
   metro      = var.metro
 }
+
+
+# resource "equinix_metal_port" "bond0" {
+#   port_id = local.bond0_id
+#   layer2 = false
+#   bonded = true
+#   vlan_ids = [data.equinix_metal_vlan.harvester.id]
+# }
