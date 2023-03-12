@@ -41,12 +41,12 @@ resource "equinix_metal_ip_attachment" "harvester1" {
 
 resource "equinix_metal_device_network_type" "harvester1" {
   device_id = equinix_metal_device.harvester1.id
-  type      = "hybrid-bonded"
+  type      = "hybrid"
 }
 
 resource "equinix_metal_port_vlan_attachment" "harvester" {
   device_id = equinix_metal_device_network_type.harvester1.id
-  port_name = "bond0"
+  port_name = "eth1"
   vlan_vnid = data.equinix_metal_vlan.harvester.vxlan
   
   depends_on = [equinix_metal_device.harvester1, equinix_metal_device_network_type.harvester1]
@@ -66,29 +66,20 @@ resource "equinix_metal_device" "harvester2" {
 
   user_data = local.cloud_config_agent1
 
-  ip_address {
-    type = "public_ipv4"
-    cidr = 31
-    }
-  ip_address {
-    type = "private_ipv4"
-    cidr = 30
-    }
-
   depends_on = [equinix_metal_device.harvester1]
 }
 
 resource "equinix_metal_device_network_type" "harvester2" {
-  device_id = equinix_metal_device.harvester1.id
-  type      = "hybrid-bonded"
+  device_id = equinix_metal_device.harvester2[0].id
+  type      = "hybrid"
 }
 
 resource "equinix_metal_port_vlan_attachment" "harvester2" {
   device_id = equinix_metal_device_network_type.harvester2.id
-  port_name = "bond0"
+  port_name = "eth1"
   vlan_vnid = data.equinix_metal_vlan.harvester.vxlan
-
-   depends_on = [equinix_metal_device.harvester2, equinix_metal_device_network_type.harvester2]
+  
+  depends_on = [equinix_metal_device.harvester1, equinix_metal_device_network_type.harvester1]
 }
 
 ############ Harvester Host 3 ##################
@@ -105,27 +96,18 @@ resource "equinix_metal_device" "harvester3" {
 
   user_data = local.cloud_config_agent2
 
-  ip_address {
-    type = "public_ipv4"
-    cidr = 31
-    }
-  ip_address {
-    type = "private_ipv4"
-    cidr = 30
-    }
-
   depends_on = [equinix_metal_device.harvester1]
 
 }
 
 resource "equinix_metal_device_network_type" "harvester3" {
-  device_id = equinix_metal_device.harvester1.id
-  type      = "hybrid-bonded"
+  device_id = equinix_metal_device.harvester3[0].id
+  type      = "hybrid"
 }
 
 resource "equinix_metal_port_vlan_attachment" "harvester3" {
   device_id = equinix_metal_device_network_type.harvester3.id
-  port_name = "bond0"
+  port_name = "eth1"
   vlan_vnid = data.equinix_metal_vlan.harvester.vxlan
 
   depends_on = [equinix_metal_device.harvester3, equinix_metal_device_network_type.harvester3]
@@ -155,12 +137,12 @@ locals {
       mode: "create"
       harvester-mgmt:
         method: static
-        ip: 10.66.12.40
+        ip: 10.66.12.42
         subnet_mask: 255.255.255.248
         gateway: 10.66.12.41
         interfaces:
-        - name: bond0
-          vlan_id: 2
+        - name: eth1
+        vlan_id: 2
         default_route: true
       device: "/dev/sda"
       iso_url: "https://equinixphilip.s3.amazonaws.com/harvester-v1.1.1-amd64.iso"
@@ -189,7 +171,7 @@ locals {
           subnet_mask: 255.255.255.248
           gateway: 10.66.12.41
           interfaces:
-          - name: bond0
+          - name: eth1
           vlan_id: 2
           default_route: true
       device: /dev/sda # The target disk to install
@@ -218,7 +200,7 @@ locals {
           subnet_mask: 255.255.255.248
           gateway: 10.66.12.41
           interfaces:
-          - name: bond0
+          - name: eth1
           vlan_id: 2
           default_route: true
       device: /dev/sda # The target disk to install
