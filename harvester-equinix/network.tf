@@ -23,13 +23,19 @@ data "equinix_metal_gateway" "harvester" {
 }
 
 
-resource "equinix_metal_vlan" "harvester" {
-  project_id = var.project
-  metro = var.metro
-  vxlan = 2
-}
+# resource "equinix_metal_vlan" "harvester" {
+#   project_id = var.project
+#   metro = var.metro
+#   vxlan = 2
+# }
+
+# data "equinix_metal_vlan" "harvester" {
+#   vlan_id = equinix_metal_vlan.harvester.id
+# }
+  
 
 data "equinix_metal_vlan" "harvester" {
-  vlan_id = equinix_metal_vlan.harvester.id
+  project_id = data.equinix_metal_project.project.id
+  vxlan      = 2
+  metro      = var.metro
 }
-  

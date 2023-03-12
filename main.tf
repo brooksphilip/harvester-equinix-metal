@@ -23,5 +23,5 @@ module "harvester1" {
   ##enabling this will deploy a 3 node cluster (Default False)
   build_cluster = true
   project = "Harvester"
-  gateway_id = "10.66.12.41"
+  gateway_id = "5df5ad8e-ba5a-4066-bafe-bf419ad0a8db"
 }
