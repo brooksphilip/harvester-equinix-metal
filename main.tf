@@ -21,7 +21,7 @@ module "harvester1" {
   token    = var.token
   ##enabling this will deploy a 3 node cluster (Default False)
   build_cluster = true
-  cluster_registration_url = ""
+  cluster_registration_url = "<cluster_registration_url"
 }
 
 output "password" {

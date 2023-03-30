@@ -3,7 +3,7 @@ output "ubuntu_password" {
   sensitive = true
 }
 
-output "password" {
+output "harvester_password" {
   value = random_password.password
   sensitive = true
 }

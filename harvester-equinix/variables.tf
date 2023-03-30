@@ -1,29 +1,26 @@
 
 variable "ssh_key" {
-  type = string
+
 }
 
 variable "token" {
-  type = string
+
 }
 
 variable "instance_size" {
-  type = string
   default = "c3.medium.x86"
+  
 }
 
 variable "metro" {
-  type = string
   default = "ny"
 }
 
 variable "project" {
-  type = string
   default = "Harvester"
 }
 
 variable "facility" {
-  type = string
   default = "ny5"
 }
 
@@ -67,10 +64,8 @@ variable public_ip_block_size {
 }
 
 variable "dns_server" {
-  type = string
   default = "1.1.1.1"
 }
 
 variable "cluster_registration_url" {
-  type = string
 }
