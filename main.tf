@@ -16,7 +16,6 @@ provider "equinix" {
 module "harvester1" {
   source   = "./harvester-equinix"
   project = "Harvester_Terraform"
-  password = var.password
   ssh_key  = var.ssh_key
   #k8s join token
   token    = var.token
