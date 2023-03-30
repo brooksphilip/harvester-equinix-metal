@@ -11,6 +11,11 @@ resource "equinix_metal_project" "project" {
   name = var.project
 }
 
+resource "random_password" "harvester_password" {
+  length  = 16
+  special = false
+}
+
 
 resource "equinix_metal_reserved_ip_block" "harvester" {
   project_id = equinix_metal_project.project.id
@@ -30,12 +35,25 @@ resource "equinix_metal_device" "harvester1" {
 
   user_data = local.cloud_config_init
 
+  depends_on = [equinix_metal_device.harvester_dhcp]
+
 }
 
 resource "equinix_metal_ip_attachment" "harvester1" {
   device_id = equinix_metal_device.harvester1.id
   # following expression will result to sth like "147.229.10.152/32"
   cidr_notation = join("/", [cidrhost(equinix_metal_reserved_ip_block.harvester.cidr_notation, 0), "32"])
+}
+
+resource "equinix_metal_device_network_type" "harvester1" {
+  device_id = equinix_metal_device.harvester1.id
+  type      = "hybrid"
+}
+
+resource "equinix_metal_port_vlan_attachment" "harvester1" {
+  device_id = equinix_metal_device_network_type.harvester1.id
+  port_name = "eth1"
+  vlan_vnid = equinix_metal_vlan.workload_vlan.vxlan
 }
 
 
@@ -52,16 +70,18 @@ resource "equinix_metal_device" "harvester2" {
 
   user_data = local.cloud_config_agent
 
-  ip_address {
-    type = "public_ipv4"
-    cidr = 31
-    }
-  ip_address {
-    type = "private_ipv4"
-    cidr = 30
-    }
+  depends_on = [equinix_metal_device.harvester1, equinix_metal_device.harvester_dhcp]
+}
 
-  depends_on = [equinix_metal_device.harvester1]
+resource "equinix_metal_device_network_type" "harvester2" {
+  device_id = equinix_metal_device.harvester2[0].id
+  type      = "hybrid"
+}
+
+resource "equinix_metal_port_vlan_attachment" "harvester2" {
+  device_id = equinix_metal_device_network_type.harvester2.id
+  port_name = "eth1"
+  vlan_vnid = equinix_metal_vlan.workload_vlan.vxlan
 }
 
 resource "equinix_metal_device" "harvester3" {
@@ -77,18 +97,21 @@ resource "equinix_metal_device" "harvester3" {
 
   user_data = local.cloud_config_agent
 
-  ip_address {
-    type = "public_ipv4"
-    cidr = 31
-    }
-  ip_address {
-    type = "private_ipv4"
-    cidr = 30
-    }
-
-  depends_on = [equinix_metal_device.harvester1]
+  depends_on = [equinix_metal_device.harvester1, equinix_metal_device.harvester_dhcp]
 
 }
+
+resource "equinix_metal_device_network_type" "harvester3" {
+  device_id = equinix_metal_device.harvester3[0].id
+  type      = "hybrid"
+}
+
+resource "equinix_metal_port_vlan_attachment" "harvester3" {
+  device_id = equinix_metal_device_network_type.harvester3.id
+  port_name = "eth1"
+  vlan_vnid = equinix_metal_vlan.workload_vlan.vxlan
+}
+
 
 
 locals {
@@ -99,7 +122,7 @@ locals {
     os:
       ssh_authorized_keys:
       - "${var.ssh_key}"
-      password: "${var.password}"
+      password: "${random_password.harvester_password.result}"
       write_files:
         - encoding: ""
           content: "tls-san: ${equinix_metal_reserved_ip_block.harvester.address}"
@@ -116,6 +139,10 @@ locals {
       tty: "ttyS1,115200n8"
       vip: "${equinix_metal_reserved_ip_block.harvester.address}"
       vip_mode: "static"
+    %{ if cluster_registration_url != "" }
+    system_settings:
+      cluster-registration-url: ${cluster_registration_url}
+    %{ endif }
   CLOUD_CONFIG
   cloud_config_agent = <<-CLOUD_CONFIG
     #cloud-config
@@ -125,18 +152,12 @@ locals {
     os:
       ssh_authorized_keys:
       - ${var.ssh_key}
-      password: ${var.password}      # Replace with your password
+      password: "${random_password.harvester_password.result}"      # Replace with your password
       dns_nameservers:
       - 1.1.1.1
       - 8.8.8.8
     install:
       mode: join
-      networks:
-        harvester-mgmt:
-          interfaces:
-          - name: eth0
-          default_route: true
-          method: dhcp
       device: /dev/sda # The target disk to install
       #data_disk: /dev/sdb # It is recommended to use a separate disk to store VM data
       iso_url: "https://equinixphilip.s3.amazonaws.com/harvester-v1.1.1-amd64.iso"
@@ -144,3 +165,20 @@ locals {
   CLOUD_CONFIG
 }
 
+
+
+      # management_interface:
+      #   interfaces:
+      #   - name: eth1
+      #   method: dhcp
+      #   vlan_id: ${var.vlan_id}
+
+
+      # networks:
+      #   harvester-mgmt:
+      #     interfaces:
+      #     - name: eth1
+      #     default_route: true
+      #     method: dhcp
+
+      # enp65s0f1

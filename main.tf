@@ -22,4 +22,15 @@ module "harvester1" {
   token    = var.token
   ##enabling this will deploy a 3 node cluster (Default False)
   build_cluster = true
+  cluster_registration_url = ""
+}
+
+output "password" {
+  value = module.harvester1.ubuntu_password
+  sensitive = true
+}
+
+output "harvester_password" {
+  value = module.harvester1.harvester_password
+  sensitive = true
 }
