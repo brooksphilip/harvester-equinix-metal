@@ -16,6 +16,10 @@ resource "random_password" "harvester_password" {
   special = false
 }
 
+resource "random_password" "token" {
+  length  = 16
+  special = false
+}
 
 resource "equinix_metal_reserved_ip_block" "harvester" {
   project_id = equinix_metal_project.project.id
@@ -33,7 +37,7 @@ resource "equinix_metal_device" "harvester1" {
   ipxe_script_url  = "https://raw.githubusercontent.com/brooksphilip/ipxe-examples/main/equinix/ipxe-install"
   always_pxe       = "false"
 
-  user_data = templatefile("${path.module}/cloud_config_init.tpl", { password = random_password.harvester_password.result, token = var.token,  ssh_key = var.ssh_key, tls_san = equinix_metal_reserved_ip_block.harvester.address, vip = equinix_metal_reserved_ip_block.harvester.address, cluster_registration_url = var.cluster_registration_url })
+  user_data = templatefile("${path.module}/cloud_config_init.tpl", { password = random_password.harvester_password.result, token = random_password.token.result,  ssh_key = var.ssh_key, tls_san = equinix_metal_reserved_ip_block.harvester.address, vip = equinix_metal_reserved_ip_block.harvester.address, cluster_registration_url = var.cluster_registration_url })
 
   depends_on = [equinix_metal_device.harvester_dhcp]
 
@@ -68,18 +72,20 @@ resource "equinix_metal_device" "harvester2" {
   ipxe_script_url  = "https://raw.githubusercontent.com/brooksphilip/ipxe-examples/main/equinix/ipxe-install"
   always_pxe       = "false"
 
-  user_data = templatefile("${path.module}/cloud_config_agent.tpl", { password = random_password.harvester_password.result, token = var.token, vip = equinix_metal_reserved_ip_block.harvester.address, ssh_key = var.ssh_key})
+  user_data = templatefile("${path.module}/cloud_config_agent.tpl", { password = random_password.harvester_password.result, token = random_password.token.result, vip = equinix_metal_reserved_ip_block.harvester.address, ssh_key = var.ssh_key})
 
   depends_on = [equinix_metal_device.harvester1, equinix_metal_device.harvester_dhcp]
 }
 
 resource "equinix_metal_device_network_type" "harvester2" {
+  count = var.build_cluster ? 1 : 0
   device_id = equinix_metal_device.harvester2[0].id
   type      = "hybrid"
 }
 
 resource "equinix_metal_port_vlan_attachment" "harvester2" {
-  device_id = equinix_metal_device_network_type.harvester2.id
+  count = var.build_cluster ? 1 : 0
+  device_id = equinix_metal_device_network_type.harvester2[0].id
   port_name = "eth1"
   vlan_vnid = equinix_metal_vlan.workload_vlan.vxlan
 }
@@ -95,19 +101,21 @@ resource "equinix_metal_device" "harvester3" {
   ipxe_script_url  = "https://raw.githubusercontent.com/brooksphilip/ipxe-examples/main/equinix/ipxe-install"
   always_pxe       = "false"
 
-  user_data = templatefile("${path.module}/cloud_config_agent.tpl", { password = random_password.harvester_password.result, token = var.token, vip = equinix_metal_reserved_ip_block.harvester.address, ssh_key = var.ssh_key})
+  user_data = templatefile("${path.module}/cloud_config_agent.tpl", { password = random_password.harvester_password.result, token = random_password.token.result, vip = equinix_metal_reserved_ip_block.harvester.address, ssh_key = var.ssh_key})
 
   depends_on = [equinix_metal_device.harvester1, equinix_metal_device.harvester_dhcp]
 
 }
 
 resource "equinix_metal_device_network_type" "harvester3" {
+  count = var.build_cluster ? 1 : 0
   device_id = equinix_metal_device.harvester3[0].id
   type      = "hybrid"
 }
 
 resource "equinix_metal_port_vlan_attachment" "harvester3" {
-  device_id = equinix_metal_device_network_type.harvester3.id
+  count = var.build_cluster ? 1 : 0
+  device_id = equinix_metal_device_network_type.harvester3[0].id
   port_name = "eth1"
   vlan_vnid = equinix_metal_vlan.workload_vlan.vxlan
 }

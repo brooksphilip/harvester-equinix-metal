@@ -7,6 +7,6 @@ variable "ssh_key" {
   type = string
 }
 
-variable "token" {
-  type = string
+variable "cluster_registration_url" {
+  
 }

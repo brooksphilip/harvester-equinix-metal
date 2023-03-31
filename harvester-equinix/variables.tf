@@ -3,13 +3,9 @@ variable "ssh_key" {
 
 }
 
-variable "token" {
-
-}
-
 variable "instance_size" {
   default = "c3.medium.x86"
-  
+
 }
 
 variable "metro" {

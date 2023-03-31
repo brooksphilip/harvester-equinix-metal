@@ -17,11 +17,9 @@ module "harvester1" {
   source   = "./harvester-equinix"
   project = "Harvester_Terraform"
   ssh_key  = var.ssh_key
-  #k8s join token
-  token    = var.token
   ##enabling this will deploy a 3 node cluster (Default False)
-  build_cluster = true
-  cluster_registration_url = "<cluster_registration_url"
+  build_cluster = false
+  cluster_registration_url = var.cluster_registration_url
 }
 
 output "password" {
@@ -31,5 +29,10 @@ output "password" {
 
 output "harvester_password" {
   value = module.harvester1.harvester_password
+  sensitive = true
+}
+
+output "token" {
+  value = module.harvester1.token
   sensitive = true
 }
