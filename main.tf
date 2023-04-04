@@ -17,8 +17,9 @@ module "harvester1" {
   source   = "./harvester-equinix"
   project = "Harvester_Terraform"
   ssh_key  = var.ssh_key
+  # instance_size = "" #over write instance size default
   ##enabling this will deploy a 3 node cluster (Default False)
-  build_cluster = false
+  build_cluster = true
   cluster_registration_url = var.cluster_registration_url
 }
 
