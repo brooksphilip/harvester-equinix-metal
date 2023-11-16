@@ -27,9 +27,9 @@ variable "build_cluster" {
 
 #DHCP
 
-variable plan {
-    default = "c3.small.x86"
-}
+# variable plan {
+#     default = "c3.small.x86"
+# }
 
 variable node_count {
     default = "1"
